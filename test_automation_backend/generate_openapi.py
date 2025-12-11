@@ -1,9 +1,9 @@
 import json
 import os
-from app import app, api  # import your Flask app and Api instance
+from app import app, api  # import Flask app and Api instance
 
 with app.app_context():
-    # flask-smorest stores the spec in api.spec
+    # Ensure all blueprints are registered and spec is up to date
     openapi_spec = api.spec.to_dict()
 
     output_dir = "interfaces"
@@ -12,3 +12,4 @@ with app.app_context():
 
     with open(output_path, "w") as f:
         json.dump(openapi_spec, f, indent=2)
+    print(f"OpenAPI spec written to {output_path}")
