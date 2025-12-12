@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: testauto_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-testauto}
+      POSTGRES_USER: ${POSTGRES_USER:-testauto}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-testauto}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./test_automation_backend
+      dockerfile: Dockerfile
+    container_name: testauto_backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      # Backend config
+      FLASK_ENV: ${FLASK_ENV:-production}
+      REACT_APP_NODE_ENV: ${REACT_APP_NODE_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY:-change-me}
+      # Database: use Postgres service by default; override to use SQLite if desired
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://${POSTGRES_USER:-testauto}:${POSTGRES_PASSWORD:-testauto}@db:5432/${POSTGRES_DB:-testauto}}
+      # CORS allowed origin (frontend)
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      # Mock toggles and auth disabled flag for early dev
+      MOCK_LLM: ${USE_LLM_MOCK:-true}
+      MOCK_EXECUTION: ${EXECUTION_MODE:-mock}
+      AUTH_DISABLED: ${AUTH_DISABLED:-true}
+    ports:
+      - "3001:3001"
+    volumes:
+      # Persist instance directory for SQLite and artifacts even on container recreate
+      - backend_instance:/app/instance
+
+  frontend:
+    build:
+      context: ./test_automation_ui
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:3001}
+    container_name: testauto_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # For client-side config when needed at runtime by the app
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
+  backend_instance:

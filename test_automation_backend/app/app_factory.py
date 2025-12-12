@@ -24,8 +24,9 @@ def create_app() -> Flask:
     # Ensure instance dir for SQLite persistence
     _ensure_instance_dir(app)
 
-    # Enable CORS broadly (adjust later for production)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    # Configure CORS: allow specific frontend origin if provided
+    frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
+    CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
     # Initialize extensions
     db.init_app(app)
