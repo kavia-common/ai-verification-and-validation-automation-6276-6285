@@ -1,0 +1,15 @@
+# Simple helpers for DB migrations
+alembic-init:
+\talembic init migrations
+
+alembic-rev:
+\talembic revision -m "$(m)"
+
+alembic-up:
+\talembic upgrade head
+
+alembic-down:
+\talembic downgrade -1
+
+create-db:
+\tflask --app app.app_factory:create_app create-db
