@@ -27,6 +27,18 @@ Key models:
    # Option B: Dev-only create tables
    flask --app app.app_factory:create_app create-db
 
+4) Start the app (example)
+   flask --app app.app_factory:create_app run -p 3001
+
+5) API Docs
+   Swagger/OpenAPI available at /docs
+
+### Runtime toggles
+
+These env vars let you run without external services:
+- MOCK_LLM=true (default): use a mock LLM to generate test cases.
+- MOCK_EXECUTION=true (default): mark executions as passed without invoking pytest.
+
 ### Migrations
 
 - Create new migration:

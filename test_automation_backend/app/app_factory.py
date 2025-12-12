@@ -5,6 +5,7 @@ from flask_smorest import Api
 
 from .config import get_config
 from .extensions import db, ma
+from .errors import register_error_handlers
 
 
 def _ensure_instance_dir(app: Flask) -> None:
@@ -16,7 +17,7 @@ def _ensure_instance_dir(app: Flask) -> None:
 
 # PUBLIC_INTERFACE
 def create_app() -> Flask:
-    """Create and configure the Flask application with DB and docs."""
+    """Create and configure the Flask application with DB, error handlers, blueprints and API docs."""
     app = Flask(__name__)
     app.config.from_object(get_config())
 
@@ -32,10 +33,27 @@ def create_app() -> Flask:
 
     # API and docs
     api = Api(app)
+    # Optional tags grouping for Swagger UI
+    api.spec.components.security_schemes = {}
+    api.spec.tags = [
+        {"name": "Healt Check", "description": "Health check route"},
+        {"name": "SRS", "description": "Upload and manage SRS CSV files"},
+        {"name": "Execution", "description": "Trigger and monitor test runs"},
+        {"name": "Scripts", "description": "Download generated scripts"},
+    ]
 
     # Register blueprints
     from .routes.health import blp as health_blp
+    from .routes.srs import blp as srs_blp
+    from .routes.execution import blp as exec_blp, scripts_blp
+
     api.register_blueprint(health_blp)
+    api.register_blueprint(srs_blp)
+    api.register_blueprint(exec_blp)
+    api.register_blueprint(scripts_blp)
+
+    # Error handlers
+    register_error_handlers(app)
 
     # CLI: create-db for quick local setup
     @app.cli.command("create-db")
